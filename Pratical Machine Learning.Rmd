@@ -1,0 +1,118 @@
+---
+title: "Pratical Machine Learning"
+author: "Fernanda H. P. Gomes"
+date: "August 26, 2018"
+output: html_document
+---
+
+### Overview
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+
+In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here (see the section on the Weight Lifting Exercise Dataset).
+
+### Loading/cleaning the Raw Data
+The data for this project come from this source
+
+The training data for this project are available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+```{r}
+setwd("D:/Internal Audit/R&D/Fernanda/Practice/R/Pratical Machine Learning")
+train<- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!",""))
+test<- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!",""))
+
+dim(train)
+dim (test)
+```
+
+## Data Partitioning
+
+```{r}
+# Load the packages
+library(caret)
+library(e1071)
+library(randomForest)
+library(gbm)
+library(rpart)
+library(rpart.plot)
+
+# Set the seed
+set.seed(1) 
+
+# remove variables with nearly 0
+train <-train[,colSums(is.na(train)) == 0]
+Test <-test[,colSums(is.na(test)) == 0]
+
+# Delete unused columns
+train <- train [,-c(1:7)]
+test<- test [,-c(1:7)]
+
+# remaining data
+dim(train)
+dim(test)
+
+# Partioning the data set
+inTrain <- createDataPartition (train$classe, p=0.70, list=F)
+train_data <- train[inTrain,]
+test_data <- train[-inTrain,]
+
+```
+
+# Data Prediction and Modeling
+
+Testing Radom Forest model
+
+```{r}
+# Defyning the best model fit
+model_1 <- randomForest(classe ~., data=train_data, method="class")
+model_1
+
+# Predicting
+prediction_1 <- predict (model_1, test_data, Type="class")
+
+# Testing
+confusionMatrix(prediction_1, test_data$classe)
+
+```
+
+Testing Generalized Boosted Model
+
+```{r}
+# Fitting model
+fitControl <- trainControl(method="repeatedcv", number=5, repeats=1)
+model_2 <- train(classe ~., data=train_data, method="gbm", trControl=fitControl, verbose=FALSE)
+model_2
+
+# Predicting
+prediction_2 <- predict(model_2, test_data)
+
+# Testing
+confusionMatrix(prediction_2, test_data$classe)
+```
+
+Testing Decision tree
+
+```{r}
+# Fitting model
+model_3 <- rpart(classe ~ ., data=train_data, method="class")
+rpart.plot(model_3)
+
+# Predicting
+prediction_3 <- predict(model_3, test_data, type="class")
+
+# Testing
+confusionMatrix(prediction_3, test_data$classe)
+
+```
+
+# Applying the selected Model to the Test Data
+
+Based on the accuracy of the 3 models above: random forest- 0.9971 , GBM - 0.9643, and decision tree - 0.7443 ; the selected model to be used for the prediction is the Random FOrest model (model_1).
+
+Below are the results for the predictions on the test data:
+```{r}
+Prediction <- predict (model_1, test)
+Prediction
+```
+
