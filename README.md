@@ -5,7 +5,7 @@ Final project for the 'Machine Learning' course at Coursera
 The goal was to create a supervised machine learning algorithm to 
 
 
-Documents:
+***Documents***:
 
 **Pratical Machine Learning Project.pdf** - PDF of the R document containing the whole process
 
